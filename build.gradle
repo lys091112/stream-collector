@@ -1,0 +1,59 @@
+// 不能放在allprojects 模块内，会造成plugin with id spring-boot not found in parent build.gradle
+buildscript {
+    repositories {
+        mavenLocal() //1.优先查找本地maven库，性能最好
+        maven {//2.其次查找aliyun maven库
+            url 'http://maven.aliyun.com/nexus/content/groups/public/'
+        }
+        mavenCentral()
+        jcenter()
+        dependencies {
+            classpath("org.springframework.boot:spring-boot-gradle-plugin:1.5.2.RELEASE")
+        }
+    }
+}
+
+allprojects { subproj ->
+    apply plugin: 'java'
+    apply plugin: 'idea'
+    apply from: "$rootDir/config.gradle"
+
+    tasks.withType(JavaCompile) {
+        sourceCompatibility = 1.8
+        targetCompatibility = 1.8
+        options.encoding = 'UTF-8'
+    }
+
+    repositories {
+        mavenLocal() //1.优先查找本地maven库，性能最好
+        maven {//2.其次查找aliyun maven库
+            url 'http://maven.aliyun.com/nexus/content/groups/public/'
+        }
+        mavenCentral()//3.最后查找maven中央库
+    }
+
+    task createJavaProject << {
+        sourceSets*.java.srcDirs*.each { it.mkdirs() }
+        sourceSets*.resources.srcDirs*.each { it.mkdirs() }
+    }
+}
+
+subprojects { subproj ->
+    apply plugin: 'application' // 可以运行、安装应用程序并用非“fat jar”方式创建二进制发布版本。
+    group = "com.xianyue.${githubProjectName}"
+    version '1.0-SNAPSHOT'
+
+    compileTestJava {
+        options.encoding = 'UTF-8'
+        options.compilerArgs += '-parameters'
+    }
+
+    dependencies {
+        testCompile "junit:junit:${Junit_Version}"
+        testCompile "org.projectlombok:lombok:${Lombok_Version}"
+
+        compile "org.projectlombok:lombok:${Lombok_Version}"
+        compile "com.google.guava:guava:${Guava_Version}"
+        compile "org.slf4j:slf4j-api:${Slf4j_Version}"
+    }
+}
