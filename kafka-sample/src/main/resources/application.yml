@@ -1,0 +1,11 @@
+
+kafka:
+  bootstrapServers: 10.128.34.238:9092
+  maxBlockMs: 5000
+  keySerializer: org.apache.kafka.common.serialization.StringSerializer
+  valueSerializer: org.apache.kafka.common.serialization.StringSerializer
+  topic: alert
+
+
+zookeeper:
+  servers: 127.0.0.1:2181

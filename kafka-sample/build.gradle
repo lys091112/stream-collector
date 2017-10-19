@@ -3,4 +3,7 @@ dependencies {
     compile "org.apache.kafka:kafka-clients:${Kafka_Version}"
     compile "org.apache.kafka:kafka_2.11:${Kafka_Version}"
     compile "org.apache.kafka:kafka-streams:${Kafka_Version}"
+    compile project(":common")
+
+
 }

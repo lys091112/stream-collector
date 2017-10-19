@@ -9,10 +9,10 @@ ext {
 
     //log
     Logback_Version = '1.1.7'
-    Slf4j_Version = '1.7.24'
+    Slf4j_Version = '1.7.25'
 
     //json
-    Jackson_Version = '2.9.0.pr3'
+    Jackson_Version = '2.9.1'
     Alibaba_Json_Version = '1.2.28'
 
     //util

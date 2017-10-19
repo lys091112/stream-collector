@@ -54,6 +54,13 @@ subprojects { subproj ->
 
         compile "org.projectlombok:lombok:${Lombok_Version}"
         compile "com.google.guava:guava:${Guava_Version}"
+        compile "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:${Jackson_Version}"
+        compile "com.fasterxml.jackson.core:jackson-databind:${Jackson_Version}"
+
+        compile "ch.qos.logback:logback-classic:${Logback_Version}"
+        compile "ch.qos.logback:logback-core:${Logback_Version}"
+        compile "org.slf4j:jcl-over-slf4j:${Slf4j_Version}"
+        compile "org.slf4j:log4j-over-slf4j:${Slf4j_Version}"
         compile "org.slf4j:slf4j-api:${Slf4j_Version}"
     }
 }

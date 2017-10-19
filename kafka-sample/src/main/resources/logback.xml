@@ -1,6 +1,6 @@
 <configuration scan="true" scanPeriod="60 seconds">
 
-  <property name="LOG_HOME" value="/tpm/stream-collector/logs"/>
+  <property name="LOG_HOME" message="/tpm/stream-collector/logs"/>
   <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
     <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
       <layout class="ch.qos.logback.classic.PatternLayout">
@@ -9,6 +9,10 @@
       <charset>UTF-8</charset>
     </encoder>
   </appender>
+
+  <logger name="com.xianyue.sample" level="DEBUG" additivity="false">
+    <appender-ref ref="STDOUT"/>
+  </logger>
 
   <root level="INFO">
     <appender-ref ref="STDOUT"/>
