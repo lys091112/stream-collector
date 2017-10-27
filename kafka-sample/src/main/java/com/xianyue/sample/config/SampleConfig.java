@@ -1,27 +1,16 @@
 package com.xianyue.sample.config;
 
+import com.xianyue.common.config.CollectorConsumerConfig;
+import com.xianyue.common.config.CollectorKafkaConfig;
 import lombok.Data;
+
+import java.util.List;
 
 @Data
 public class SampleConfig {
 
-    private KafkaConfig kafka;
-    private ZookeeperConfig zookeeper;
+    private CollectorKafkaConfig kafka;
+    private List<CollectorConsumerConfig> consumers;
 
-    @Data
-    public class KafkaConfig {
-
-        private String bootstrapServers;
-        private String maxBlockMs;
-        private String keySerializer;
-        private String valueSerializer;
-        private String topic;
-    }
-
-    @Data
-    public class ZookeeperConfig {
-
-        private String servers;
-    }
 
 }

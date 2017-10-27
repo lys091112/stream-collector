@@ -1,8 +1,6 @@
 package com.xianyue.sample.producer;
 
-import com.xianyue.sample.config.SampleConfig.KafkaConfig;
-import java.util.Properties;
-import java.util.concurrent.ExecutionException;
+import com.xianyue.common.config.CollectorKafkaConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.producer.Callback;
 import org.apache.kafka.clients.producer.KafkaProducer;
@@ -11,13 +9,16 @@ import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
 
+import java.util.Properties;
+import java.util.concurrent.ExecutionException;
+
 @Slf4j
 public class SampleProducer<K, V> implements Sender<K, V> {
 
-    private KafkaConfig config;
+    private CollectorKafkaConfig config;
     private Producer<K, V> producer;
 
-    public SampleProducer(KafkaConfig config) {
+    public SampleProducer(CollectorKafkaConfig config) {
         this.config = config;
         Properties props = new Properties();
         props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG,
