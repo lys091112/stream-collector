@@ -11,6 +11,4 @@ public class SampleConfig {
 
     private CollectorKafkaConfig kafka;
     private List<CollectorConsumerConfig> consumers;
-
-
 }

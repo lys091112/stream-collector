@@ -32,7 +32,8 @@ public class WordCountSample {
     public static void main(String[] args) throws Exception {
         Properties props = new Properties();
         props.put(StreamsConfig.APPLICATION_ID_CONFIG, "streams-wordcount-2");
-        props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "10.128.6.188:32771");
+//        props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "192.168.1.7:32768");
+        props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "10.128.6.188:32768");
         props.put(StreamsConfig.CACHE_MAX_BYTES_BUFFERING_CONFIG, 0);
         props.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.String().getClass().getName());
         props.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, Serdes.String().getClass().getName());
@@ -51,7 +52,7 @@ public class WordCountSample {
             .groupBy((key, value) -> value)
             .count("Counts")
             // need to override value serde to Long type
-            .to(Serdes.String(), Serdes.Long(), "alert-output");
+            .to(Serdes.String(), Serdes.Long(), "alert01");
 
         final KafkaStreams streams = new KafkaStreams(builder, props);
         final CountDownLatch latch = new CountDownLatch(1);

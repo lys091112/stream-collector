@@ -1,8 +1,10 @@
 package com.xianyue.common.config;
 
+import com.xianyue.common.ConfigPrefix;
 import lombok.Data;
 
 @Data
+@ConfigPrefix("consumers")
 public class CollectorConsumerConfig {
     private String name;
     private String bootstrapServers;
