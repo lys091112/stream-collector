@@ -23,12 +23,17 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.Properties;
+import java.util.TimeZone;
 
 public class Consumer extends ShutdownableThread {
-    private final KafkaConsumer<Integer, String> consumer;
+    private final KafkaConsumer<String, Long> consumer;
     private final CollectorConsumerConfig config;
+    private DateTimeFormatter timeFormater = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     public Consumer(CollectorConsumerConfig config) {
         super(config.getName(), false);
@@ -48,9 +53,13 @@ public class Consumer extends ShutdownableThread {
     @Override
     public void doWork() {
         consumer.subscribe(Collections.singletonList(this.config.getTopic()));
-        ConsumerRecords<Integer, String> records = consumer.poll(1000);
-        for (ConsumerRecord<Integer, String> record : records) {
-            System.out.println("Received message: (" + record.key() + ", " + record.value() + ") at offset " + record.offset());
+        ConsumerRecords<String, Long> records = consumer.poll(1000);
+        for (ConsumerRecord<String, Long> record : records) {
+            System.out.println("Received message: (" + record.key() + ", " + record.value() + ") at offset " + record.offset() + " time: " +
+                    timeFormater.format(LocalDateTime.ofInstant(Instant.ofEpochMilli(record.timestamp()), TimeZone.getDefault().toZoneId())));
+
+            System.out.println("now -->  " + timeFormater.format(LocalDateTime.ofInstant(Instant.ofEpochMilli(System.currentTimeMillis()), TimeZone
+                    .getDefault().toZoneId())));
         }
     }
 
