@@ -51,6 +51,7 @@ subprojects { subproj ->
     dependencies {
         testCompile "junit:junit:${Junit_Version}"
         testCompile "org.projectlombok:lombok:${Lombok_Version}"
+        testCompile "org.assertj:assertj-core:${Assertj_Version}"
 
         compile "org.projectlombok:lombok:${Lombok_Version}"
         compile "com.google.guava:guava:${Guava_Version}"
@@ -62,5 +63,6 @@ subprojects { subproj ->
         compile "org.slf4j:jcl-over-slf4j:${Slf4j_Version}"
         compile "org.slf4j:log4j-over-slf4j:${Slf4j_Version}"
         compile "org.slf4j:slf4j-api:${Slf4j_Version}"
+
     }
 }

@@ -29,4 +29,6 @@ ext {
 
     //test
     Junit_Version = '4.12'
+    Assertj_Version = '3.8.0'
+
 }
