@@ -27,3 +27,18 @@ sh kafka-console-consumer.sh \
 
     因为在kafkaStream中，kStream 和kTable是两种类型， KStream可以认为是记录数据的变化过程，kTable是对数据此时刻的真实景象，保存的永远
     是数据的最终状态值
+    
+    保证Kafka Topic 中的数据唯一，那么就要保证没有聚合完的数据不能发送到kafka
+    解决方法： 使用filter(Windowed<T>) 来过滤掉窗口没有聚合完成的数据
+    ```java
+      public void test(KStream kstream) {
+       kstream.filter(new Predicate<Windowed<byte[]>, Long>() {
+            // prefect
+            // 不保留中间记录，将没有完成的窗口数据guo lu过滤掉，只发送已经完全聚合过的数据，超过该窗口的数据则进行丢弃
+            @Override
+            public boolean test(Windowed<byte[]> key, Long value) {
+                return key.window().end() <= System.currentTimeMillis();
+            }
+        });
+    }
+    ```

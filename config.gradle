@@ -25,7 +25,8 @@ ext {
     Common_Io_Version = "2.5"
 
     //kafka+zk
-    Kafka_Version = "0.11.0.1"
+//    Kafka_Version = "0.11.0.1"
+    Kafka_Version = "1.0.0"
 
     //test
     Junit_Version = '4.12'

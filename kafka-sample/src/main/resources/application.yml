@@ -1,6 +1,6 @@
 
 kafka:
-  bootstrapServers: 10.128.6.188:32771
+  bootstrapServers: 10.128.6.188:32770
   maxBlockMs: 5000
   keySerializer: org.apache.kafka.common.serialization.StringSerializer
   valueSerializer: org.apache.kafka.common.serialization.StringSerializer
@@ -9,14 +9,14 @@ kafka:
 
 consumers:
   - name: KafkaConsumerExample
-    bootstrapServers: 10.128.6.188:32771
+    bootstrapServers: 10.128.6.188:32770
     groupId: sampleConsumer
     autoCommit: true
     autoCommitIntervalMs: 10000
     sessionTimeoutMs: 30000
-    keySerializer: org.apache.kafka.common.serialization.StringSerializer
-    valueSerializer: org.apache.kafka.common.serialization.StringSerializer
-    topic: alert
+    keySerializer: org.apache.kafka.common.serialization.StringDeserializer
+    valueSerializer: org.apache.kafka.common.serialization.LongDeserializer
+    topic: alert-window-output
 
 stream:
   bootstrapServers: 10.128.34.238:9092
