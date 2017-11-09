@@ -1,5 +1,6 @@
 package com.xianyue.sample.stream;
 
+import com.xianyue.common.util.TimeUtil;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -32,7 +33,7 @@ public class TumblingWindowKafkaStream {
         config.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "10.128.6.188:32770");
         config.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.ByteArray().getClass().getName());
         config.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, Serdes.Long().getClass().getName());
-//        config.put(StreamsConfig.COMMIT_INTERVAL_MS_CONFIG, 30000L);
+        config.put(StreamsConfig.COMMIT_INTERVAL_MS_CONFIG, 20000L);
 //        config.put(StreamsConfig.CACHE_MAX_BYTES_BUFFERING_CONFIG, 0);
 
         KStreamBuilder builder = new KStreamBuilder();
@@ -58,10 +59,15 @@ public class TumblingWindowKafkaStream {
                                       }
                                   }
         ).filter(new Predicate<Windowed<byte[]>, Long>() {
-            // 不保留中间记录，将没有完成的窗口数据guo lu过滤掉，只发送已经完全聚合过的数据，超过该窗口的数据则进行丢弃
             @Override
             public boolean test(Windowed<byte[]> key, Long value) {
-                return key.window().end() <= System.currentTimeMillis();
+                boolean res = key.window().end() <= System.currentTimeMillis();
+                if (res) {
+                    System.out.println("Value message: (" + value + ") " + " time: " + TimeUtil.formatTime(key.window().start()));
+                } else {
+                    System.out.println("--Missing message: (" + value + ") " + " time: " + TimeUtil.formatTime(key.window().start()));
+                }
+                return true; // do nothing
             }
         }).to("alert-window-output", Produced.with(windowedSerde, Serdes.Long()));
 
@@ -86,11 +92,11 @@ public class TumblingWindowKafkaStream {
         while (total < 2200) {
             long num = rng.nextLong() % 10;
             producer.send(new ProducerRecord<byte[], Long>("alert-window", "A".getBytes(), num));
-            System.out.println("-------- " + total++);
-            Thread.sleep(500L);
+//            System.out.println("-------- " + total++);
+            Thread.sleep(6000L);
             sum += num;
             if (total % 30 == 0) {
-                System.out.println("---- once-------------->> sum = " + sum);
+//                System.out.println("---- once-------------->> sum = " + sum);
                 sum = 0;
             }
         }
