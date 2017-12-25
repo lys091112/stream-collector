@@ -1,25 +1,16 @@
 package com.xianyue.sample;
 
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.xianyue.common.config.CollectorConsumerConfig;
-import com.xianyue.sample.config.SampleConfig;
-import com.xianyue.sample.producer.SampleProducer;
-import com.xianyue.sample.producer.Sender;
-import com.xianyue.common.util.YamlConverter;
-import java.io.IOException;
-import java.util.List;
+import com.xianyue.sample.stream.TumblingWindowKafkaStream;
+import java.util.HashMap;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class Application {
 
-    public static void main(String[] args) throws IOException {
-        SampleConfig config = YamlConverter.config(SampleConfig.class, "application.yml");
-        System.out.println();
-
-        // produecer
+    public static void main(String[] args) throws Exception {
+//        SampleConfig config = YamlConverter.config(SampleConfig.class, "application.yml");
+//
+//        // produecer
 //        Sender<String, String> producer = new SampleProducer(config.getKafka());
 //        try {
 //            for (int i = 0; i < 10; i++) {
@@ -31,5 +22,6 @@ public class Application {
 //        }finally {
 //            producer.close();
 //        }
+        TumblingWindowKafkaStream.TumblinProducer(new HashMap<>());
     }
 }

@@ -46,9 +46,9 @@ public class YamlConverter<T> {
             }
 
             TreeTraversingParser treeTraversingParser = new TreeTraversingParser(node);
-            final T config = mapper.readValue(treeTraversingParser, clazz);
-            return config;
+            return mapper.readValue(treeTraversingParser, clazz);
         } catch (Exception e) {
+            log.error("exception:{}", e);
             throw e;
         }
     }

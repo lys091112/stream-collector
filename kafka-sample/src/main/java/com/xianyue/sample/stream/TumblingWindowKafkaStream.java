@@ -1,103 +1,79 @@
 package com.xianyue.sample.stream;
 
-import com.xianyue.common.util.TimeUtil;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Random;
 import org.apache.kafka.clients.producer.KafkaProducer;
-import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.common.serialization.Serdes;
+import org.apache.kafka.common.utils.Bytes;
 import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.StreamsConfig;
 import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.kstream.KStreamBuilder;
 import org.apache.kafka.streams.kstream.KTable;
-import org.apache.kafka.streams.kstream.KeyValueMapper;
-import org.apache.kafka.streams.kstream.Predicate;
+import org.apache.kafka.streams.kstream.Materialized;
 import org.apache.kafka.streams.kstream.Produced;
 import org.apache.kafka.streams.kstream.TimeWindows;
 import org.apache.kafka.streams.kstream.Windowed;
 import org.apache.kafka.streams.kstream.internals.WindowedDeserializer;
 import org.apache.kafka.streams.kstream.internals.WindowedSerializer;
-
-import java.util.Properties;
-import java.util.Random;
+import org.apache.kafka.streams.state.WindowStore;
 
 public class TumblingWindowKafkaStream {
 
     public static void main(String[] args) throws Exception {
 
+        long windowSize = 60000L;
+
         Properties config = new Properties();
 
         config.put(StreamsConfig.APPLICATION_ID_CONFIG, "tumbling-window-kafka-streams");
-        config.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "10.128.6.188:32770");
-        config.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.ByteArray().getClass().getName());
+        config.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "10.128.6.188:32769");
+        config.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.String().getClass().getName());
         config.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, Serdes.Long().getClass().getName());
-        config.put(StreamsConfig.COMMIT_INTERVAL_MS_CONFIG, 20000L);
-//        config.put(StreamsConfig.CACHE_MAX_BYTES_BUFFERING_CONFIG, 0);
+        config.put(StreamsConfig.COMMIT_INTERVAL_MS_CONFIG, 10000L);
 
         KStreamBuilder builder = new KStreamBuilder();
-
-        KStream<byte[], Long> longs = builder.stream(Serdes.ByteArray(), Serdes.Long(), "alert-window");
+        KStream<String, Long> longs = builder.stream(Serdes.String(), Serdes.Long(), "alert-window3");
 
         // The tumbling windows will clear every ten seconds.
-        KTable<Windowed<byte[]>, Long> longCounts =
-                longs.groupByKey()
-                        .count(TimeWindows.of(10000L).until(10000L),
-                                "Count");
+        KTable<Windowed<String>, Long> longCounts =
+            longs.groupByKey().windowedBy(TimeWindows.of(windowSize))
+                .count(Materialized.<String, Long, WindowStore<Bytes, byte[]>>as("Count3"));
 
+        WindowedSerializer<String> windowedSerializer = new WindowedSerializer<>(Serdes.String().serializer());
+        WindowedDeserializer<String> windowedDeserializer = new WindowedDeserializer<>(
+            Serdes.String().deserializer(), windowSize);
+        Serde<Windowed<String>> windowedSerde = Serdes.serdeFrom(windowedSerializer, windowedDeserializer);
 
-        WindowedSerializer<byte[]> windowedSerializer = new WindowedSerializer<>(Serdes.ByteArray().serializer());
-        WindowedDeserializer<byte[]> windowedDeserializer = new WindowedDeserializer<>(Serdes.ByteArray().deserializer(), 10000L);
-        Serde<Windowed<byte[]>> windowedSerde = Serdes.serdeFrom(windowedSerializer, windowedDeserializer);
+        longCounts.toStream().map((key, value) -> new KeyValue<>(key, value)).to("alert-window3-output", Produced.with(windowedSerde, Serdes.Long()));
 
-        // need to override key serde to Windowed<byte[]> type
-        longCounts.toStream().map(new KeyValueMapper<Windowed<byte[]>, Long, KeyValue<Windowed<byte[]>, Long>>() {
-                                      @Override
-                                      public KeyValue<Windowed<byte[]>, Long> apply(Windowed<byte[]> key, Long value) {
-                                          return new KeyValue<>(key, value);
-                                      }
-                                  }
-        ).filter(new Predicate<Windowed<byte[]>, Long>() {
-            @Override
-            public boolean test(Windowed<byte[]> key, Long value) {
-                boolean res = key.window().end() <= System.currentTimeMillis();
-                if (res) {
-                    System.out.println("Value message: (" + value + ") " + " time: " + TimeUtil.formatTime(key.window().start()));
-                } else {
-                    System.out.println("--Missing message: (" + value + ") " + " time: " + TimeUtil.formatTime(key.window().start()));
-                }
-                return true; // do nothing
-            }
-        }).to("alert-window-output", Produced.with(windowedSerde, Serdes.Long()));
-
-        KafkaStreams streams = new KafkaStreams(builder, config);
+        System.out.println("-----------------> " + builder.nodeGroups());
+        KafkaStreams streams = new KafkaStreams(builder, new StreamsConfig(config), new WindowKafkaClientSupplier());
         streams.start();
 
-        // Now generate the data and write to the topic.
+    }
+
+    public static void TumblinProducer(Map<String, Long> keyValues) throws InterruptedException {
         Properties producerConfig = new Properties();
-        producerConfig.put("bootstrap.servers", "10.128.6.188:32770");
-        producerConfig.put("key.serializer", "org.apache.kafka.common.serialization.ByteArraySerializer");
+        producerConfig.put("bootstrap.servers", "10.128.6.188:32769");
+        producerConfig.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
         producerConfig.put("value.serializer", "org.apache.kafka.common.serialization.LongSerializer");
-        config.put(ProducerConfig.BATCH_SIZE_CONFIG, 1);
 
-        KafkaProducer producer = new KafkaProducer<byte[], Long>(producerConfig);
-
-        int total = 0;
-        int sum = 0;
-
-        ProducerRecord producerRecord = new ProducerRecord<byte[], Long>("alert-window", "A".getBytes(), -1L);
+        KafkaProducer producer = new KafkaProducer<String, Long>(producerConfig);
 
         Random rng = new Random(12345L);
+        int total = 0;
         while (total < 2200) {
             long num = rng.nextLong() % 10;
-            producer.send(new ProducerRecord<byte[], Long>("alert-window", "A".getBytes(), num));
-//            System.out.println("-------- " + total++);
-            Thread.sleep(6000L);
-            sum += num;
-            if (total % 30 == 0) {
-//                System.out.println("---- once-------------->> sum = " + sum);
-                sum = 0;
+            producer.send(new ProducerRecord<String, Long>("alert-window3", "A", num));
+            System.out.println("-------- " + total++);
+            Thread.sleep(500L);
+            if (total % 60 == 0) {
+                System.out.println("------keyValues----------->>" + keyValues);
             }
         }
     }

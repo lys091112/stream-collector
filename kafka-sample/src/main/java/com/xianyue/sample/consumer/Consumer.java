@@ -18,14 +18,20 @@ package com.xianyue.sample.consumer;
 
 import com.xianyue.common.config.CollectorConsumerConfig;
 import com.xianyue.common.util.TimeUtil;
+import com.xianyue.common.util.YamlConverter;
+import com.xianyue.sample.config.SampleConfig;
+import java.io.IOException;
+import java.util.Collections;
+import java.util.Properties;
 import kafka.utils.ShutdownableThread;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
-
-import java.util.Collections;
-import java.util.Properties;
+import org.apache.kafka.common.serialization.Deserializer;
+import org.apache.kafka.common.serialization.Serdes;
+import org.apache.kafka.streams.kstream.Windowed;
+import org.apache.kafka.streams.kstream.internals.WindowedDeserializer;
 
 public class Consumer<K,V> extends ShutdownableThread {
     private final KafkaConsumer<K, V> consumer;
@@ -42,7 +48,8 @@ public class Consumer<K,V> extends ShutdownableThread {
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, config.getKeySerializer());
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, config.getValueSerializer());
 
-        consumer = new KafkaConsumer<>(props);
+        consumer = new KafkaConsumer<K, V>(props,
+            (Deserializer<K>) new WindowedDeserializer<byte[]>(Serdes.ByteArray().deserializer(), 10000L), null);
         this.config = config;
     }
 
@@ -51,10 +58,8 @@ public class Consumer<K,V> extends ShutdownableThread {
         consumer.subscribe(Collections.singletonList(this.config.getTopic()));
         ConsumerRecords<K, V> records = consumer.poll(1000);
         for (ConsumerRecord<K, V> record : records) {
-            System.out.print("Received message: (" + record.value() + ") at offset " + record.offset() + " time: " +
-                    TimeUtil.formatTime(record.timestamp()));
-
-            System.out.println(" ------> " + TimeUtil.formatTime(System.currentTimeMillis()));
+            System.out.println("Received message: (" + record.value() + ") at offset " + record.offset() + " time: " +
+                record.key() + ", time: " + TimeUtil.formatTime(record.timestamp()));
         }
     }
 
@@ -66,5 +71,11 @@ public class Consumer<K,V> extends ShutdownableThread {
     @Override
     public boolean isInterruptible() {
         return false;
+    }
+
+    public static void main(String[] args) throws IOException {
+        SampleConfig config = YamlConverter.config(SampleConfig.class, "application.yml");
+        Consumer<Windowed<byte[]>, Long> consumer = new Consumer<>(config.getConsumers().get(0));
+        new Thread(consumer).start();
     }
 }
