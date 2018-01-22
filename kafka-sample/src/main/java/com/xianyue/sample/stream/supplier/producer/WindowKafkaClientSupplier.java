@@ -1,4 +1,4 @@
-package com.xianyue.sample.stream;
+package com.xianyue.sample.stream.supplier.producer;
 
 import java.util.Map;
 import org.apache.kafka.clients.producer.Producer;

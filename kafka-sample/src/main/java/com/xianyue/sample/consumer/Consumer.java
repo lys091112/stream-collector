@@ -47,9 +47,10 @@ public class Consumer<K,V> extends ShutdownableThread {
         props.put(ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG, config.getSessionTimeoutMs());
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, config.getKeySerializer());
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, config.getValueSerializer());
+        props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "latest");
 
         consumer = new KafkaConsumer<K, V>(props,
-            (Deserializer<K>) new WindowedDeserializer<byte[]>(Serdes.ByteArray().deserializer(), 10000L), null);
+            (Deserializer<K>) new WindowedDeserializer<byte[]>(Serdes.ByteArray().deserializer(), 60000L), null);
         this.config = config;
     }
 
@@ -58,7 +59,7 @@ public class Consumer<K,V> extends ShutdownableThread {
         consumer.subscribe(Collections.singletonList(this.config.getTopic()));
         ConsumerRecords<K, V> records = consumer.poll(1000);
         for (ConsumerRecord<K, V> record : records) {
-            System.out.println("Received message: (" + record.value() + ") at offset " + record.offset() + " time: " +
+            System.out.println(config.getName() + "========>  Received message: (" + record.value() + ") at offset " + record.offset() + " time: " +
                 record.key() + ", time: " + TimeUtil.formatTime(record.timestamp()));
         }
     }
@@ -75,7 +76,10 @@ public class Consumer<K,V> extends ShutdownableThread {
 
     public static void main(String[] args) throws IOException {
         SampleConfig config = YamlConverter.config(SampleConfig.class, "application.yml");
-        Consumer<Windowed<byte[]>, Long> consumer = new Consumer<>(config.getConsumers().get(0));
-        new Thread(consumer).start();
+//        Consumer<Windowed<byte[]>, Long> consumer = new Consumer<>(config.getConsumers().get(0));
+//        new Thread(consumer).start();
+
+        Consumer<Windowed<byte[]>, Long> consumerChangeLog = new Consumer<>(config.getConsumers().get(1));
+        new Thread(consumerChangeLog).start();
     }
 }

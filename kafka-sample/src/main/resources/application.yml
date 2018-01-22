@@ -17,6 +17,15 @@ consumers:
     keySerializer: org.apache.kafka.common.serialization.StringDeserializer
     valueSerializer: org.apache.kafka.common.serialization.LongDeserializer
     topic: alert-window3-output
+  - name: KafkaConsumerChangeLog
+    bootstrapServers: 10.128.6.188:32769
+    groupId: sampleConsumer
+    autoCommit: true
+    autoCommitIntervalMs: 10000
+    sessionTimeoutMs: 30000
+    keySerializer: org.apache.kafka.common.serialization.StringDeserializer
+    valueSerializer: org.apache.kafka.common.serialization.LongDeserializer
+    topic: tumbling-window-kafka-streams-Count3-changelog
 
 stream:
   bootstrapServers: 10.128.34.238:9092

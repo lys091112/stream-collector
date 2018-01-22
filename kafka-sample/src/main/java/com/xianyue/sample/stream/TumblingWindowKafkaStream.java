@@ -1,5 +1,6 @@
 package com.xianyue.sample.stream;
 
+import com.xianyue.sample.stream.supplier.transform.ExactlyOnceTransformer;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Random;
@@ -20,6 +21,7 @@ import org.apache.kafka.streams.kstream.TimeWindows;
 import org.apache.kafka.streams.kstream.Windowed;
 import org.apache.kafka.streams.kstream.internals.WindowedDeserializer;
 import org.apache.kafka.streams.kstream.internals.WindowedSerializer;
+import org.apache.kafka.streams.processor.internals.DefaultKafkaClientSupplier;
 import org.apache.kafka.streams.state.WindowStore;
 
 public class TumblingWindowKafkaStream {
@@ -36,6 +38,7 @@ public class TumblingWindowKafkaStream {
         config.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, Serdes.Long().getClass().getName());
         config.put(StreamsConfig.COMMIT_INTERVAL_MS_CONFIG, 10000L);
 
+//        StoreSupplier store = Stores.persistentWindowStore("transformStore", 60000L, 3, 60000L, false);
         KStreamBuilder builder = new KStreamBuilder();
         KStream<String, Long> longs = builder.stream(Serdes.String(), Serdes.Long(), "alert-window3");
 
@@ -49,10 +52,17 @@ public class TumblingWindowKafkaStream {
             Serdes.String().deserializer(), windowSize);
         Serde<Windowed<String>> windowedSerde = Serdes.serdeFrom(windowedSerializer, windowedDeserializer);
 
-        longCounts.toStream().map((key, value) -> new KeyValue<>(key, value)).to("alert-window3-output", Produced.with(windowedSerde, Serdes.Long()));
+        longCounts.toStream().map((key, value) -> new KeyValue<>(key, value))
+            .transform(ExactlyOnceTransformer::new)
+            .to("alert-window3-output", Produced.with(windowedSerde, Serdes.Long()));
 
         System.out.println("-----------------> " + builder.nodeGroups());
-        KafkaStreams streams = new KafkaStreams(builder, new StreamsConfig(config), new WindowKafkaClientSupplier());
+
+//        使用自定义的producer supplier 来保证数据的唯一性
+//        KafkaStreams streams = new KafkaStreams(builder, new StreamsConfig(config), new WindowKafkaClientSupplier());
+
+        // 使用自定义kafka producer supplier
+        KafkaStreams streams = new KafkaStreams(builder, new StreamsConfig(config), new DefaultKafkaClientSupplier());
         streams.start();
 
     }

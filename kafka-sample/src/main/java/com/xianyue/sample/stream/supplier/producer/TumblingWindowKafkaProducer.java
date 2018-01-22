@@ -1,4 +1,4 @@
-package com.xianyue.sample.stream;
+package com.xianyue.sample.stream.supplier.producer;
 
 import com.xianyue.common.util.TimeUtil;
 import java.util.Comparator;
